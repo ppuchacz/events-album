@@ -1,0 +1,33 @@
+Stwórz aplikację do współdzielenia zdjęć na imprezach okolicznościowych
+Aplikacja ma spełniać założenia opisane niżej w dokumencie. W systemie masz dostępne narzędzia composer, php, symfony-cli. Docker jest dostępny tylko z poziomu wsl - pozostałe narzędzia zarówno wsl jak i zwykłego cmd.
+
+
+Aplikacja do udostępniania zdjęć i filmów na imprezach okolicznościowych - album online
+
+# Podstawowa funkcjonalność
+## Strona dla gości ze zdjęciami
+Podgląd zdjęć i filmów wrzucanych przez użytkowników na stronę
+Wrzucanie zdjęć i filmów
+Powiększenie zdjęcia lub odtworzenie filmu po kliknięciu w miniaturkę
+
+## Panel administracyjny
+Rejestracja / logowanie
+Ustawienie identyfikatora/sluga pod którym będzie dostępna strona dla gości
+Możliwość ukrywania materiałów
+Włączenie/wyłaczenie możliwości wysyłania materiałów przez gości
+Sterowanie widocznością strony - wybranie dat aktywności/przełącznik
+Generowanie kodu qr z linkiem do strony
+Wybranie jakości wyświetlanych zdjęć / filmów na stronie (Wysoka, Średnia, Niska, Bardzo oszczędna) żeby dopasować działanie strony do spodziewanej jakości łącza internetowego w miejscu gdzie będzie odbywała się uroczystość
+
+## Systemowe
+Generowanie miniaturek dla zdjęć i filmów
+Konwertowanie filmów na określony format tak aby mieściły się w wybranych przedziałach jakości
+
+# Architektura ssytemu
+
+Aplikacja frontendowa w React
+Aplikacja API/Panel w PHP Symfony
+Worker do konwersji filmów wykorzystujący ffmpeg
+Kolejka RabbitMQ przyjmująca zlecenie konwersji filmu
+
+Każdy projekt aplikacji powinien mieć załączony Makefile. W katalogu głownym projektu nadrzędnego powinien istnieć plik docker compose w wersjach prod i dev
