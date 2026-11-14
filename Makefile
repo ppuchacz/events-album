@@ -1,4 +1,4 @@
-.PHONY: help dev-up dev-down dev-build dev-logs prod-up prod-down prod-build prod-logs migrate
+.PHONY: help dev-up dev-down dev-build dev-logs prod-up prod-down prod-build prod-logs migrate k8s-build k8s-apply k8s-delete k8s-status
 
 help:
 	@echo "EventAlbum - Główny Makefile projektu:"
@@ -11,6 +11,10 @@ help:
 	@echo "  make prod-build  - Przebudowanie obrazów produkcyjnych"
 	@echo "  make prod-logs   - Podgląd logów środowiska produkcyjnego"
 	@echo "  make migrate     - Wykonanie migracji bazy danych w kontenerze backend"
+	@echo "  make k8s-build   - Zbudowanie produkcyjnych obrazów Docker pod Kubernetes"
+	@echo "  make k8s-apply   - Wdrożenie manifestów Kubernetes (k8s/)"
+	@echo "  make k8s-delete  - Usunięcie zasobów Kubernetes"
+	@echo "  make k8s-status  - Sprawdzenie statusu podów, serwisów i ingressu w przestrzeni events-album"
 
 dev-up:
 	docker compose -f docker-compose.dev.yml up -d --build
@@ -38,3 +42,16 @@ prod-logs:
 
 migrate:
 	docker compose -f docker-compose.dev.yml exec backend php bin/console doctrine:migrations:migrate --no-interaction
+
+k8s-build:
+	docker build --target prod -t events-album-backend:latest ./backend
+	docker build --target prod -t events-album-frontend:latest ./frontend
+
+k8s-apply:
+	kubectl apply -k k8s/
+
+k8s-delete:
+	kubectl delete -k k8s/ --ignore-not-found
+
+k8s-status:
+	kubectl get all,ingress,pvc -n events-album
