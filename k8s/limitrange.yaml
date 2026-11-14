@@ -1,0 +1,22 @@
+apiVersion: v1
+kind: LimitRange
+metadata:
+  name: events-album-limits
+  labels:
+    app.kubernetes.io/name: events-album
+    app.kubernetes.io/part-of: events-album
+spec:
+  limits:
+    - type: Container
+      default:
+        cpu: 500m
+        memory: 512Mi
+      defaultRequest:
+        cpu: 100m
+        memory: 128Mi
+      min:
+        cpu: 10m
+        memory: 32Mi
+      max:
+        cpu: 2000m
+        memory: 2Gi

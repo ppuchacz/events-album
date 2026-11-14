@@ -94,7 +94,13 @@ Manifesty znajdują się w katalogu [k8s/](file:///home/ppuchacz/projects/events
    - Adnotacje Nginx Ingress: `proxy-body-size: 256m` (obsługa przesyłania dużych plików wideo i zdjęć) oraz `proxy-read-timeout: 300s`.
 10. **Autoskalowanie HPA ([k8s/backend-hpa.yaml](file:///home/ppuchacz/projects/events-album/k8s/backend-hpa.yaml))**:
     - HorizontalPodAutoscaler skalujący pody backendu w zakresie od 2 do 10 replik na podstawie utylizacji CPU (próg 60%) oraz pamięci (próg 75%).
-11. **Kustomizacja ([k8s/kustomization.yaml](file:///home/ppuchacz/projects/events-album/k8s/kustomization.yaml))**:
+11. **Domyślne limity zasobów ([k8s/limitrange.yaml](file:///home/ppuchacz/projects/events-album/k8s/limitrange.yaml))**:
+    - LimitRange definiujący domyślne (`default` 500m / 512Mi, `defaultRequest` 100m / 128Mi) oraz graniczne (`min` 10m / 32Mi, `max` 2000m / 2Gi) zasoby dla kontenerów w namespace.
+12. **Ochrona zasobów klastra ([k8s/resourcequota.yaml](file:///home/ppuchacz/projects/events-album/k8s/resourcequota.yaml))**:
+    - ResourceQuota narzucająca twardy limit łącznego zużycia CPU (4 rdzenie requests, 16 rdzeni limits pod HPA), pamięci (6Gi requests, 16Gi limits), liczby podów (max 20) i wolumenów dyskowych (max 15Gi storage).
+13. **Segmentacja i bezpieczeństwo sieci ([k8s/networkpolicy.yaml](file:///home/ppuchacz/projects/events-album/k8s/networkpolicy.yaml))**:
+    - Polityki NetworkPolicy wdrażające model Zero-Trust: domyślna blokada `default-deny-all`, dedykowany dostęp do DNS (port 53), zezwolenie na ruch `frontend -> backend` (:8000), `backend/worker -> database` (:5432) oraz `backend/worker -> rabbitmq` (:5672). Brak bezpośredniego dostępu z zewnątrz do bazy PostgreSQL i brak nasłuchu sieciowego na workerze.
+14. **Kustomizacja ([k8s/kustomization.yaml](file:///home/ppuchacz/projects/events-album/k8s/kustomization.yaml))**:
     - Agregacja wszystkich manifestów i automatyczne przypisanie do przestrzeni nazw `events-album`.
 
 ### Instrukcja wdrożenia na klastrze Kubernetes / Minikube:

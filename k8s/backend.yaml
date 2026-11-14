@@ -61,6 +61,13 @@ spec:
               };
               $check('database', 5432, 'Database');
               $check('rabbitmq', 5672, 'RabbitMQ');
+          resources:
+            requests:
+              cpu: 10m
+              memory: 32Mi
+            limits:
+              cpu: 100m
+              memory: 64Mi
       containers:
         - name: backend
           image: events-album-backend:latest

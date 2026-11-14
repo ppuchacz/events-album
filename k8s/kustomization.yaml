@@ -15,3 +15,6 @@ resources:
   - frontend.yaml
   - ingress.yaml
   - backend-hpa.yaml
+  - limitrange.yaml
+  - resourcequota.yaml
+  - networkpolicy.yaml
