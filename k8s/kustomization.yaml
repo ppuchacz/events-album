@@ -7,7 +7,6 @@ resources:
   - namespace.yaml
   - configmap.yaml
   - secret.yaml
-  - rabbitmq-pvc.yaml
   - uploads-pvc.yaml
   - database.yaml
   - rabbitmq.yaml

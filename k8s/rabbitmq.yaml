@@ -19,7 +19,7 @@ spec:
     app.kubernetes.io/component: rabbitmq
 ---
 apiVersion: apps/v1
-kind: Deployment
+kind: StatefulSet
 metadata:
   name: rabbitmq
   labels:
@@ -27,9 +27,8 @@ metadata:
     app.kubernetes.io/component: rabbitmq
     app.kubernetes.io/part-of: events-album
 spec:
+  serviceName: rabbitmq
   replicas: 1
-  strategy:
-    type: Recreate
   selector:
     matchLabels:
       app.kubernetes.io/component: rabbitmq
@@ -88,7 +87,16 @@ spec:
             limits:
               cpu: 500m
               memory: 512Mi
-      volumes:
-        - name: rabbitmq-storage
-          persistentVolumeClaim:
-            claimName: rabbitmq-pvc
+  volumeClaimTemplates:
+    - metadata:
+        name: rabbitmq-storage
+        labels:
+          app.kubernetes.io/name: events-album
+          app.kubernetes.io/component: rabbitmq
+          app.kubernetes.io/part-of: events-album
+      spec:
+        accessModes:
+          - ReadWriteOnce
+        resources:
+          requests:
+            storage: 1Gi
