@@ -16,3 +16,4 @@ resources:
   - worker.yaml
   - frontend.yaml
   - ingress.yaml
+  - backend-hpa.yaml
