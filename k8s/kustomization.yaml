@@ -1,0 +1,18 @@
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+
+namespace: events-album
+
+resources:
+  - namespace.yaml
+  - configmap.yaml
+  - secret.yaml
+  - database-pvc.yaml
+  - rabbitmq-pvc.yaml
+  - uploads-pvc.yaml
+  - database.yaml
+  - rabbitmq.yaml
+  - backend.yaml
+  - worker.yaml
+  - frontend.yaml
+  - ingress.yaml

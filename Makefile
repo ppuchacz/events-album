@@ -1,4 +1,4 @@
-.PHONY: help dev-up dev-down dev-build dev-logs prod-up prod-down prod-build prod-logs migrate k8s-build k8s-apply k8s-delete k8s-status
+.PHONY: help dev-up dev-down dev-build dev-logs prod-up prod-down prod-build prod-logs migrate k8s-build k8s-load k8s-apply k8s-delete k8s-status
 
 help:
 	@echo "EventAlbum - Główny Makefile projektu:"
@@ -12,6 +12,7 @@ help:
 	@echo "  make prod-logs   - Podgląd logów środowiska produkcyjnego"
 	@echo "  make migrate     - Wykonanie migracji bazy danych w kontenerze backend"
 	@echo "  make k8s-build   - Zbudowanie produkcyjnych obrazów Docker pod Kubernetes"
+	@echo "  make k8s-load    - Załadowanie zbudowanych obrazów do klastra Minikube"
 	@echo "  make k8s-apply   - Wdrożenie manifestów Kubernetes (k8s/)"
 	@echo "  make k8s-delete  - Usunięcie zasobów Kubernetes"
 	@echo "  make k8s-status  - Sprawdzenie statusu podów, serwisów i ingressu w przestrzeni events-album"
@@ -46,6 +47,10 @@ migrate:
 k8s-build:
 	docker build --target prod -t events-album-backend:latest ./backend
 	docker build --target prod -t events-album-frontend:latest ./frontend
+
+k8s-load:
+	minikube image load events-album-backend:latest
+	minikube image load events-album-frontend:latest
 
 k8s-apply:
 	kubectl apply -k k8s/

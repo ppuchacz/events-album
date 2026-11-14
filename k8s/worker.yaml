@@ -1,0 +1,113 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: worker
+  labels:
+    app.kubernetes.io/name: events-album
+    app.kubernetes.io/component: worker
+    app.kubernetes.io/part-of: events-album
+spec:
+  replicas: 1
+  strategy:
+    type: Recreate
+  selector:
+    matchLabels:
+      app.kubernetes.io/component: worker
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/name: events-album
+        app.kubernetes.io/component: worker
+        app.kubernetes.io/part-of: events-album
+    spec:
+      initContainers:
+        - name: wait-for-dependencies
+          image: events-album-backend:latest
+          imagePullPolicy: IfNotPresent
+          command:
+            - php
+            - -r
+            - |
+              $check = function ($host, $port, $name) {
+                  echo "Waiting for $name at $host:$port...\n";
+                  for ($i = 0; $i < 60; $i++) {
+                      $fp = @fsockopen($host, $port, $errno, $errstr, 2);
+                      if ($fp) {
+                          fclose($fp);
+                          echo "$name is ready!\n";
+                          return true;
+                      }
+                      sleep(2);
+                  }
+                  echo "$name connection timed out!\n";
+                  exit(1);
+              };
+              $check('database', 5432, 'Database');
+              $check('rabbitmq', 5672, 'RabbitMQ');
+              $check('backend', 8000, 'Backend API');
+      containers:
+        - name: worker
+          image: events-album-backend:latest
+          imagePullPolicy: IfNotPresent
+          command:
+            - sh
+            - -c
+            - |
+              echo "Starting Symfony Messenger async consumer loop..."
+              while true; do
+                php bin/console messenger:consume async --time-limit=3600 --memory-limit=256M
+                sleep 1
+              done
+          env:
+            - name: APP_ENV
+              valueFrom:
+                configMapKeyRef:
+                  name: events-album-config
+                  key: APP_ENV
+            - name: APP_DEBUG
+              valueFrom:
+                configMapKeyRef:
+                  name: events-album-config
+                  key: APP_DEBUG
+            - name: CORS_ALLOW_ORIGIN
+              valueFrom:
+                configMapKeyRef:
+                  name: events-album-config
+                  key: CORS_ALLOW_ORIGIN
+            - name: APP_SECRET
+              valueFrom:
+                secretKeyRef:
+                  name: events-album-secrets
+                  key: APP_SECRET
+            - name: DATABASE_URL
+              valueFrom:
+                secretKeyRef:
+                  name: events-album-secrets
+                  key: DATABASE_URL
+            - name: MESSENGER_TRANSPORT_DSN
+              valueFrom:
+                secretKeyRef:
+                  name: events-album-secrets
+                  key: MESSENGER_TRANSPORT_DSN
+          volumeMounts:
+            - name: uploads-volume
+              mountPath: /app/public/uploads
+          livenessProbe:
+            exec:
+              command:
+                - pidof
+                - php
+            initialDelaySeconds: 15
+            periodSeconds: 20
+            timeoutSeconds: 5
+          resources:
+            requests:
+              cpu: 200m
+              memory: 256Mi
+            limits:
+              cpu: 2000m
+              memory: 2Gi
+      volumes:
+        - name: uploads-volume
+          persistentVolumeClaim:
+            claimName: uploads-pvc
