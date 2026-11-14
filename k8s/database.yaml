@@ -16,7 +16,7 @@ spec:
     app.kubernetes.io/component: database
 ---
 apiVersion: apps/v1
-kind: Deployment
+kind: StatefulSet
 metadata:
   name: database
   labels:
@@ -24,9 +24,8 @@ metadata:
     app.kubernetes.io/component: database
     app.kubernetes.io/part-of: events-album
 spec:
+  serviceName: database
   replicas: 1
-  strategy:
-    type: Recreate
   selector:
     matchLabels:
       app.kubernetes.io/component: database
@@ -63,7 +62,7 @@ spec:
             - name: PGDATA
               value: /var/lib/postgresql/data/pgdata
           volumeMounts:
-            - name: postgres-storage
+            - name: database-storage
               mountPath: /var/lib/postgresql/data
           livenessProbe:
             exec:
@@ -90,7 +89,16 @@ spec:
             limits:
               cpu: 500m
               memory: 512Mi
-      volumes:
-        - name: postgres-storage
-          persistentVolumeClaim:
-            claimName: database-pvc
+  volumeClaimTemplates:
+    - metadata:
+        name: database-storage
+        labels:
+          app.kubernetes.io/name: events-album
+          app.kubernetes.io/component: database
+          app.kubernetes.io/part-of: events-album
+      spec:
+        accessModes:
+          - ReadWriteOnce
+        resources:
+          requests:
+            storage: 2Gi

@@ -70,11 +70,11 @@ Manifesty znajdują się w katalogu [k8s/](file:///home/ppuchacz/projects/events
    - [k8s/configmap.yaml](file:///home/ppuchacz/projects/events-album/k8s/configmap.yaml) – zmienne środowiskowe aplikacji (`APP_ENV=prod`, nazwy hostów, porty).
    - [k8s/secret.yaml](file:///home/ppuchacz/projects/events-album/k8s/secret.yaml) – hasła bazy danych, kolejki RabbitMQ oraz `APP_SECRET` i DSN.
 3. **Wolumeny trwałe (Persistent Volumes)**:
-   - [k8s/database-pvc.yaml](file:///home/ppuchacz/projects/events-album/k8s/database-pvc.yaml) (`2Gi`, ReadWriteOnce) – dane PostgreSQL (`/var/lib/postgresql/data`).
+   - Wolumen bazy danych zarządzany automatycznie przez `volumeClaimTemplates` w StatefulSet ([k8s/database.yaml](file:///home/ppuchacz/projects/events-album/k8s/database.yaml)) (`2Gi`, ReadWriteOnce, `/var/lib/postgresql/data`).
    - [k8s/rabbitmq-pvc.yaml](file:///home/ppuchacz/projects/events-album/k8s/rabbitmq-pvc.yaml) (`1Gi`, ReadWriteOnce) – stan i kolejki RabbitMQ (`/var/lib/rabbitmq`).
    - [k8s/uploads-pvc.yaml](file:///home/ppuchacz/projects/events-album/k8s/uploads-pvc.yaml) (`5Gi`, ReadWriteMany) – współdzielony wolumen zdjęć i filmów (`/app/public/uploads`), montowany wspólnie przez `backend` i `worker`.
 4. **Baza danych ([k8s/database.yaml](file:///home/ppuchacz/projects/events-album/k8s/database.yaml))**:
-   - PostgreSQL 16 Alpine, serwis `database:5432`, z sondami liveness i readiness opartymi o `pg_isready`.
+   - PostgreSQL 16 Alpine wdrożony jako **StatefulSet** (`database-0`), ze stabilną tożsamością sieciową, dedykowanym szablonem `volumeClaimTemplates` oraz serwisem `database:5432` i sondami liveness/readiness (`pg_isready`).
 5. **Kolejka komunikatów ([k8s/rabbitmq.yaml](file:///home/ppuchacz/projects/events-album/k8s/rabbitmq.yaml))**:
    - RabbitMQ 3 Management Alpine, serwis `rabbitmq` (`5672` AMQP, `15672` Management UI), z sondami `rabbitmq-diagnostics ping`.
 6. **Backend API ([k8s/backend.yaml](file:///home/ppuchacz/projects/events-album/k8s/backend.yaml))**:
