@@ -92,7 +92,9 @@ Manifesty znajdują się w katalogu [k8s/](file:///home/ppuchacz/projects/events
 9. **Ingress ([k8s/ingress.yaml](file:///home/ppuchacz/projects/events-album/k8s/ingress.yaml))**:
    - Reguła ingressu kierująca ruch na serwis `frontend:80`.
    - Adnotacje Nginx Ingress: `proxy-body-size: 256m` (obsługa przesyłania dużych plików wideo i zdjęć) oraz `proxy-read-timeout: 300s`.
-10. **Kustomizacja ([k8s/kustomization.yaml](file:///home/ppuchacz/projects/events-album/k8s/kustomization.yaml))**:
+10. **Autoskalowanie HPA ([k8s/backend-hpa.yaml](file:///home/ppuchacz/projects/events-album/k8s/backend-hpa.yaml))**:
+    - HorizontalPodAutoscaler skalujący pody backendu w zakresie od 2 do 10 replik na podstawie utylizacji CPU (próg 60%) oraz pamięci (próg 75%).
+11. **Kustomizacja ([k8s/kustomization.yaml](file:///home/ppuchacz/projects/events-album/k8s/kustomization.yaml))**:
     - Agregacja wszystkich manifestów i automatyczne przypisanie do przestrzeni nazw `events-album`.
 
 ### Instrukcja wdrożenia na klastrze Kubernetes / Minikube:
@@ -107,9 +109,39 @@ make k8s-load
 # 3. Wdrożenie wszystkich manifestów (Kustomize)
 make k8s-apply
 
-# 4. Sprawdzenie statusu podów, serwisów, ingressu i wolumenów
+# 4. Sprawdzenie statusu podów, serwisów, ingressu, wolumenów i HPA
 make k8s-status
 
 # 5. Usunięcie wdrożonych zasobów z klastra
 make k8s-delete
 ```
+
+---
+
+## 🧪 Testy Obciążeniowe i Wydajnościowe (k6)
+
+W katalogu [k6/](file:///home/ppuchacz/projects/events-album/k6) znajdują się scenariusze testowe w [k6](https://k6.io) symulujące zachowanie użytkowników w realistycznym natężeniu ruchu oraz weryfikujące skalowanie backendu HPA.
+
+- [k6/smoke_test.js](file:///home/ppuchacz/projects/events-album/k6/smoke_test.js) – szybka weryfikacja wszystkich ścieżek użytkownika (1 VU).
+- [k6/scenarios/realistic_event_load.js](file:///home/ppuchacz/projects/events-album/k6/scenarios/realistic_event_load.js) – symulacja imprezy z podziałem na 3 persony:
+  - **Organizatorzy (~5%)**: rejestracja, logowanie, konfiguracja parametrów albumu i jakości,
+  - **Goście przeglądający (~70%)**: skanowanie QR, wejście na stronę SPA, przeglądanie galerii, pobieranie miniatur i podgląd pełnoekranowy zdjęć,
+  - **Goście dodający multimedia (~25%)**: wpisanie życzeń/podpisu, wysyłanie zdjęć (multipart/form-data) i natychmiastowy odbiór miniatury.
+- [k6/scenarios/hpa_scaling_test.js](file:///home/ppuchacz/projects/events-album/k6/scenarios/hpa_scaling_test.js) – test generujący skokowe obciążenie CPU w celu wywołania skalowania HPA z 2 do 10 replik.
+
+### Polecenia do uruchomienia testów:
+
+```bash
+# Szybki test dymny
+make k6-smoke
+
+# Pełny test realistycznego obciążenia imprezy
+make k6-event
+
+# Test sprawdzający autoskalowanie HPA
+make k6-hpa
+
+# Obserwacja na żywo zachowania autoskalera HPA w osobnym oknie
+make k8s-hpa-watch
+```
+Szczegółowy opis konfiguracji i metryk znajduje się w [k6/README.md](file:///home/ppuchacz/projects/events-album/k6/README.md).
